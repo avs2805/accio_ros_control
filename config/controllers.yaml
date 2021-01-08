@@ -1,0 +1,17 @@
+accio:
+  controller:
+    state:
+      # Publish all joint states
+      type: joint_state_controller/JointStateController
+      publish_rate: 50 
+
+    position:
+      # position controllers
+      left_wheel_joint:
+        type: effort_controllers/JointEffortController
+        joint: LF_hinge
+        pid: { p: 1.0, i: 1.0, d: 1.0 }
+      right_wheel_joint:
+        type: effort_controllers/JointEffortController
+        joint: RF_hinge
+        pid: { p: 1.0, i: 1.0, d: 1.0 }
