@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+
+    <rosparam file="$(find accio_hardware_interface)/config/hardware.yaml" command="load" />
+    <rosparam file="$(find accio_hardware_interface)/config/controllers.yaml" command="load" ns="" />
+
+</launch>
