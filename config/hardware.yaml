@@ -2,5 +2,7 @@ accio:
   hardware_interface:
     loop_hz: 10 # hertz Hz
     joints:
-      - left_wheel_joint
-      - right_wheel_joint
+      - FL_hinge
+      - FR_hinge
+      - RL_hinge
+      - RR_hinge

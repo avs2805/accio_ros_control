@@ -1,5 +1,0 @@
-joint_limits:
-  left_wheel_joint:
-    has_position_limits: false
-  right_wheel_joint:
-    has_position_limits: false
