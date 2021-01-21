@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(accio_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -12,6 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  controller_manager
+  roscpp
+  hardware_interface
 )
 
 ## System dependencies are found with CMake's conventions
@@ -104,9 +107,15 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES accio_control
-#  CATKIN_DEPENDS nav_msgs roscpp rospy std_msgs
+  CATKIN_DEPENDS 
+    nav_msgs
+    rospy 
+    std_msgs   
+    controller_manager
+    roscpp
+    hardware_interface
 #  DEPENDS system_lib
 )
 
@@ -117,7 +126,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+include
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -205,3 +214,10 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(${PROJECT_NAME}_node src/accio_hardware_interface.cpp
+)
+
+target_link_libraries(${PROJECT_NAME}_node 
+  ${catkin_LIBRARIES}
+)

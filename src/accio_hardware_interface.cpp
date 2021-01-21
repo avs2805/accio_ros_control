@@ -3,6 +3,7 @@
 #include <joint_limits_interface/joint_limits.h>
 #include <joint_limits_interface/joint_limits_urdf.h>
 #include <joint_limits_interface/joint_limits_rosparam.h>
+#include <std_msgs/Float32.h>
 
 AccioHardwareInterface::AccioHardwareInterface(ros::NodeHandle &nh) : node_handle_(nh)
 {
@@ -18,9 +19,14 @@ AccioHardwareInterface::AccioHardwareInterface(ros::NodeHandle &nh) : node_handl
     ros::Duration update_freq = ros::Duration(1.0 / loop_hz_);
 
     my_control_loop_ = nh.createTimer(update_freq, &AccioHardwareInterface::update, this);
+
+    lWheelSub = node_handle_.subscribe("lWheelTicks", 10, &AccioHardwareInterface::lwheel_ticks_cb, this);
+    rWheelSub = node_handle_.subscribe("rWheelTicks", 10, &AccioHardwareInterface::rwheel_ticks_cb, this);
+
+
 } // constructor
 
-AccioHardwareInterface::~AccioHardwareInterface() {} // descructor
+AccioHardwareInterface::~AccioHardwareInterface(){}; // descructor
 
 void AccioHardwareInterface::init()
 {
@@ -39,7 +45,6 @@ void AccioHardwareInterface::init()
     // intialize the controller
     for (int i = 0; i < num_joints_; ++i)
     {
-
         // Create joint state interfaces
         hardware_interface::JointStateHandle jointStateHandle(joint_names_[i], &joint_position_[i], &joint_velocity_[i], &joint_effort_[i]);
         joint_state_interface_.registerHandle(jointStateHandle);
@@ -63,24 +68,60 @@ void AccioHardwareInterface::init()
     registerInterface(&effort_joint_saturation_interface_);
     registerInterface(&position_joint_saturation_interface_);
 
+    TICKS_TO_RADS = 2 * M_PI / 300.8;
+    _curr_lwheel_count,_curr_rwheel_count  = 0;
+    _delta_l_enc, _delta_r_enc = 0;
+    _prev_left_encoder, _prev_right_encoder = 0;
+    ang_left, ang_right = 0.0;
+
 } // init
 
-void accio_hardware_interface::update(const ros::TimerEvent &e)
+void AccioHardwareInterface::update(const ros::TimerEvent &e)
 {
     elapsed_time_ = ros::Duration(e.current_real - e.last_real);
-    read();
+    read(elapsed_time_);
     controller_manager_->update(ros::Time::now(), elapsed_time_);
     write(elapsed_time_);
 } // update
 
-void accio_hardware_interface::read()
+void AccioHardwareInterface::read(ros::Duration elapsed_time)
 {
-    // do nothing
+    double ang_distance_left = ang_left;
+    double ang_distance_right = ang_right;
+    joint_position_[0] += ang_distance_left;
+    joint_velocity_[0] += ang_distance_left / elapsed_time.toSec();
+    joint_position_[1] += ang_distance_right;
+    joint_velocity_[1] += ang_distance_right / elapsed_time.toSec();
 } // read
 
-void accio_hardware_interface::write(ros::Duration elapsed_time)
+void AccioHardwareInterface::write(ros::Duration elapsed_time)
 {
+    double diff_ang_speed_left = joint_effort_command_[0];
+    double diff_ang_speed_right = joint_effort_command_[1];
     effort_joint_saturation_interface_.enforceLimits(elapsed_time);
+    // Publish results
+    std_msgs::Float32 left_wheel_vel_msg;
+    std_msgs::Float32 right_wheel_vel_msg;
+    left_wheel_vel_msg.data = diff_ang_speed_left;
+    right_wheel_vel_msg.data = diff_ang_speed_right;
+    left_wheel_vel_pub_.publish(left_wheel_vel_msg);
+    right_wheel_vel_pub_.publish(right_wheel_vel_msg);
+}
+
+void AccioHardwareInterface::lwheel_ticks_cb(const std_msgs::Int32::ConstPtr &lwheel_ticks_data)
+{
+    _curr_lwheel_count = lwheel_ticks_data->data;
+    _delta_l_enc = _curr_lwheel_count - _prev_left_encoder;
+    ang_left = TICKS_TO_RADS * _delta_l_enc;
+    _prev_left_encoder = _curr_lwheel_count;
+}
+
+void AccioHardwareInterface::rwheel_ticks_cb(const std_msgs::Int32::ConstPtr &rwheel_ticks_data)
+{
+    _curr_rwheel_count = rwheel_ticks_data->data;
+    _delta_r_enc = _curr_rwheel_count - _prev_right_encoder;
+    ang_right = TICKS_TO_RADS * _delta_r_enc;
+    _prev_right_encoder = _curr_rwheel_count;
 }
 
 int main(int argc, char **argv)
@@ -90,9 +131,9 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh;
     // nh.setCallbackQueue(&ros_queue);
-    accio_hardware_interface::accio_hardware_interface ahi(nh);
+    AccioHardwareInterface AHI(nh);
 
-    ros::MultiThreadedSpinner spinner(0);
+    ros::MultiThreadedSpinner spinner(2);
     spinner.spin();
     return 0;
 }

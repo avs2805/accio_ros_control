@@ -5,21 +5,21 @@ accio:
       type: joint_state_controller/JointStateController
       publish_rate: 50 
 
-    position:
-      # position controllers
-      left_wheel_joint:
-        type: effort_controllers/JointEffortController
-        joint: LF_hinge
-        pid: { p: 1.0, i: 1.0, d: 1.0 }
-      right_wheel_joint:
-        type: effort_controllers/JointEffortController
-        joint: RF_hinge
-        pid: { p: 1.0, i: 1.0, d: 1.0 }
+    # position:
+    #   # position controllers
+    #   left_wheel_joint:
+    #     type: effort_controllers/JointEffortController
+    #     joint: LF_hinge
+    #     pid: { p: 1.0, i: 1.0, d: 1.0 }
+    #   right_wheel_joint:
+    #     type: effort_controllers/JointEffortController
+    #     joint: RF_hinge
+    #     pid: { p: 1.0, i: 1.0, d: 1.0 }
 
     diff_drive_controller:
       type: "diff_drive_controller/DiffDriveController"
-      left_wheel: ['FL_hinge', 'RL_hinge']
-      right_wheel: ['FR_hinge', 'RR_hinge']
+      left_wheel: 'FL_hinge'
+      right_wheel: 'FR_hinge'
       publish_rate: 50
       pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
       twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
@@ -31,7 +31,7 @@ accio:
 
       # Odometry fused with IMU is published by robot_localization, so
       # no need to publish a TF based on encoders alone.
-      enable_odom_tf: true
+      enable_odom_tf: false
 
       # Husky hardware provides wheel velocities
       estimate_velocity_from_position: false
@@ -45,20 +45,26 @@ accio:
       linear:
         x:
           has_velocity_limits    : true
-          max_velocity           : 1.0   # m/s
+          max_velocity           : 0.5 # m/s
+          min_velocity           : 0.1 # m/s
           has_acceleration_limits: true
-          max_acceleration       : 3.0   # m/s^2
+          max_acceleration       : 0.8 # m/s^2
+          min_acceleration       : -0.4 # m/s^2
+          has_jerk_limits        : true
+          max_jerk               : 5.0  # m/s^3
       angular:
         z:
           has_velocity_limits    : true
-          max_velocity           : 2.0   # rad/s
+          max_velocity           : 0.5  # rad/s
           has_acceleration_limits: true
-          max_acceleration       : 6.0   # rad/s^2
+          max_acceleration       : 1.0  # rad/s^2
+          has_jerk_limits        : true
+          max_jerk               : 2.5  # rad/s^3
 
   loop_hz: 10 # hertz Hz
   
   joints:
     - FL_hinge
     - FR_hinge
-    - RL_hinge
-    - RR_hinge
+    # - RL_hinge
+    # - RR_hinge
