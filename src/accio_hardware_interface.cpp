@@ -4,30 +4,28 @@
 #include <joint_limits_interface/joint_limits_urdf.h>
 #include <joint_limits_interface/joint_limits_rosparam.h>
 
-namespace accio_hardware_interface
-{
-    accio_hardware_interface::accio_hardware_interface(ros::NodeHandle &nh) : nh_(nh)
+    AccioHardwareInterface::AccioHardwareInterface(ros::NodeHandle &nh) : node_handle_(nh)
     {
         // Declare all JointHandles, JointInterfaces and JointLimitInterfaces of the robot.
         init();
 
         // Create the controller manager
-        controller_manager_.reset(new controller_manager::ControllerManager(this, nh_));
+        controller_manager_.reset(new controller_manager::ControllerManager(this, node_handle_));
 
         //Set the frequency of the control loop.
         // loop_hz_ = 10;
-        nh_.param("/accio/hardware_interface/loop_hz", loop_hz_, 0.1);
+        node_handle_.param("/accio/hardware_interface/loop_hz", loop_hz_, 0.1);
         ros::Duration update_freq = ros::Duration(1.0 / loop_hz_);
 
-        my_control_loop_ = nh.createTimer(update_freq, &accio_hardware_interface::update, this);
+        my_control_loop_ = nh.createTimer(update_freq, &AccioHardwareInterface::update, this);
     } // constructor
 
-    accio_hardware_interface::~accio_hardware_interface() {} // descructor
+    AccioHardwareInterface::~AccioHardwareInterface() {} // descructor
 
-    void accio_hardware_interface::init()
+    void AccioHardwareInterface::init()
     {
         // Get joint names
-        nh_.getParam("/ROBOT/hardware_interface/joints", joint_names_);
+        node_handle_.getParam("/accio/controllers/joints", joint_names_);
         num_joints_ = joint_names_.size();
 
         // resize vectors
@@ -53,7 +51,7 @@ namespace accio_hardware_interface
             // Create Joint Limit interfaces
             joint_limits_interface::JointLimits limits;
             // joint_limits_interface::SoftJointLimits softLimits;
-            joint_limits_interface::getJointLimits(joint_names_[i], nh_, limits);
+            joint_limits_interface::getJointLimits(joint_names_[i], node_handle_, limits);
             joint_limits_interface::EffortJointSaturationHandle jointLimitsHandle(jointEffortHandle, limits);
             effort_joint_saturation_interface_.registerHandle(jointLimitsHandle);
 
@@ -63,6 +61,7 @@ namespace accio_hardware_interface
         registerInterface(&position_joint_interface_);
         registerInterface(&effort_joint_interface_);
         registerInterface(&effort_joint_saturation_interface_);
+        registerInterface(&position_joint_saturation_interface_);
 
     } // init
 
@@ -71,7 +70,7 @@ namespace accio_hardware_interface
         elapsed_time_ = ros::Duration(e.current_real - e.last_real);
         read();
         controller_manager_->update(ros::Time::now(), elapsed_time_);
-            write(elapsed_time_);
+        write(elapsed_time_);
     } // update
 
     void accio_hardware_interface::read()
@@ -81,6 +80,20 @@ namespace accio_hardware_interface
 
     void accio_hardware_interface::write(ros::Duration elapsed_time)
     {
-
+        effort_joint_saturation_interface_.enforceLimits(elapsed_time);
+        
     }
-} // namespace accio_hardware_interface
+
+    int main(int argc, char** argv)
+    {
+    ros::init(argc, argv, "accio_hardware_interface");
+    // ros::CallbackQueue ros_queue;
+
+    ros::NodeHandle nh;
+    // nh.setCallbackQueue(&ros_queue);
+    accio_hardware_interface::accio_hardware_interface ahi(nh);
+
+    ros::MultiThreadedSpinner spinner(0);
+    spinner.spin();
+    return 0;
+    }

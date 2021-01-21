@@ -14,26 +14,28 @@
 // #include <acciocpp/accio.h>
 // #include <accio_control/accio_ha
 
-namespace accio_hardware_interface
-{
-    class accio_hardware_interface
+    class AccioHardwareInterface: public hardware_interface::RobotHW
     {
     public:
-        accio_hardware_interface(ros::NodeHandle &nh);
-        ~accio_hardware_interface();
+        // Constructor
+        AccioHardwareInterface(ros::NodeHandle &nh);
+        // Destructor
+        ~AccioHardwareInterface();
+        // Init, Update, Read, Write
         void init();
         void update(const ros::TimerEvent &e);
         void read();
         void write(ros::Duration elapsed_time);
 
     protected:
-        // Interfaces
+        // Basic Interfaces
+        // Joint state interface provides the current joint state of the robot
         hardware_interface::JointStateInterface joint_state_interface_;
         hardware_interface::PositionJointInterface position_joint_interface_;
         hardware_interface::VelocityJointInterface velocity_joint_interface_;
         hardware_interface::EffortJointInterface effort_joint_interface_;
 
-        joint_limits_interface::JointLimits limits;
+        // Saturation and Limits Interface
         joint_limits_interface::EffortJointSaturationInterface effort_joint_saturation_interface_;
         joint_limits_interface::EffortJointSoftLimitsInterface effort_joint_limits_interface_;
         joint_limits_interface::PositionJointSaturationInterface position_joint_saturation_interface_;
@@ -56,7 +58,7 @@ namespace accio_hardware_interface
         std::vector<double> joint_upper_limits_;
         std::vector<double> joint_effort_limits_;
 
-        ros::NodeHandle nh_;
+        ros::NodeHandle node_handle_;
         ros::Timer my_control_loop_;
         ros::Timer non_realtime_loop_;
         ros::Duration control_period_;
@@ -68,6 +70,5 @@ namespace accio_hardware_interface
 
         double p_error_, v_error_, e_error_;
     };
-}
 
 #endif
