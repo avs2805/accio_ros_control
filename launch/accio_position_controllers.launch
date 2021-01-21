@@ -11,8 +11,8 @@
     <node name="accio_hardware_interface" pkg="accio_control" type="accio_control_node" output="screen"/>
 
     <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" respawn="false"  args="
-            /accio/controllers/state
-            /accio/controllers/diff_drive_controller
+            controllers/state
+            controllers/base_controller
         "/>
 
         <node name="robot_state_publisher" 

@@ -1,70 +1,69 @@
-accio:
-  controllers:
-    state:
-      # Publish all joint states
-      type: joint_state_controller/JointStateController
-      publish_rate: 50 
+controllers:
+  state:
+    # Publish all joint states
+    type: joint_state_controller/JointStateController
+    publish_rate: 50 
 
-    # position:
-    #   # position controllers
-    #   left_wheel_joint:
-    #     type: effort_controllers/JointEffortController
-    #     joint: LF_hinge
-    #     pid: { p: 1.0, i: 1.0, d: 1.0 }
-    #   right_wheel_joint:
-    #     type: effort_controllers/JointEffortController
-    #     joint: RF_hinge
-    #     pid: { p: 1.0, i: 1.0, d: 1.0 }
+  # position:
+  #   # position controllers
+  #   left_wheel_joint:
+  #     type: effort_controllers/JointEffortController
+  #     joint: LF_hinge
+  #     pid: { p: 1.0, i: 1.0, d: 1.0 }
+  #   right_wheel_joint:
+  #     type: effort_controllers/JointEffortController
+  #     joint: RF_hinge
+  #     pid: { p: 1.0, i: 1.0, d: 1.0 }
 
-    diff_drive_controller:
-      type: "diff_drive_controller/DiffDriveController"
-      left_wheel: 'FL_hinge'
-      right_wheel: 'FR_hinge'
-      publish_rate: 50
-      pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
-      twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
-      cmd_vel_timeout: 0.25
-      velocity_rolling_window_size: 2
+  base_controller:
+    type: "diff_drive_controller/DiffDriveController"
+    left_wheel: ['FL_hinge','RL_hinge']
+    right_wheel: ['FR_hinge','RR_hinge']
+    publish_rate: 50
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    cmd_vel_timeout: 0.25
+    velocity_rolling_window_size: 2
 
-      # Base frame_id
-      base_frame_id: base_footprint
+    # Base frame_id
+    base_frame_id: base_footprint
 
-      # Odometry fused with IMU is published by robot_localization, so
-      # no need to publish a TF based on encoders alone.
-      enable_odom_tf: false
+    # Odometry fused with IMU is published by robot_localization, so
+    # no need to publish a TF based on encoders alone.
+    enable_odom_tf: false
 
-      # Husky hardware provides wheel velocities
-      estimate_velocity_from_position: false
+    # Husky hardware provides wheel velocities
+    estimate_velocity_from_position: false
 
-      # Wheel separation and radius multipliers
-      wheel_separation_multiplier: 1.0 # default: 1.0
-      wheel_radius_multiplier    : 1.0 # default: 1.0
+    # Wheel separation and radius multipliers
+    wheel_separation_multiplier: 1.0 # default: 1.0
+    wheel_radius_multiplier    : 1.0 # default: 1.0
 
-      # Velocity and acceleration limits
-      # Whenever a min_* is unspecified, default to -max_*
-      linear:
-        x:
-          has_velocity_limits    : true
-          max_velocity           : 0.5 # m/s
-          min_velocity           : 0.1 # m/s
-          has_acceleration_limits: true
-          max_acceleration       : 0.8 # m/s^2
-          min_acceleration       : -0.4 # m/s^2
-          has_jerk_limits        : true
-          max_jerk               : 5.0  # m/s^3
-      angular:
-        z:
-          has_velocity_limits    : true
-          max_velocity           : 0.5  # rad/s
-          has_acceleration_limits: true
-          max_acceleration       : 1.0  # rad/s^2
-          has_jerk_limits        : true
-          max_jerk               : 2.5  # rad/s^3
+    # Velocity and acceleration limits
+    # Whenever a min_* is unspecified, default to -max_*
+    linear:
+      x:
+        has_velocity_limits    : true
+        max_velocity           : 0.5 # m/s
+        min_velocity           : 0.1 # m/s
+        has_acceleration_limits: true
+        max_acceleration       : 0.8 # m/s^2
+        min_acceleration       : -0.4 # m/s^2
+        has_jerk_limits        : true
+        max_jerk               : 5.0  # m/s^3
+    angular:
+      z:
+        has_velocity_limits    : true
+        max_velocity           : 0.5  # rad/s
+        has_acceleration_limits: true
+        max_acceleration       : 1.0  # rad/s^2
+        has_jerk_limits        : true
+        max_jerk               : 2.5  # rad/s^3
 
-  loop_hz: 10 # hertz Hz
-  
-  joints:
-    - FL_hinge
-    - FR_hinge
-    # - RL_hinge
-    # - RR_hinge
+loop_hz: 10 # hertz Hz
+
+joints:
+  - FL_hinge
+  - FR_hinge
+  - RL_hinge
+  - RR_hinge

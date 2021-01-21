@@ -15,13 +15,17 @@ AccioHardwareInterface::AccioHardwareInterface(ros::NodeHandle &nh) : node_handl
 
     //Set the frequency of the control loop.
     // loop_hz_ = 10;
-    node_handle_.param("/accio/loop_hz", loop_hz_, 0.1);
+    node_handle_.param("loop_hz", loop_hz_, 0.1);
     ros::Duration update_freq = ros::Duration(1.0 / loop_hz_);
 
     my_control_loop_ = nh.createTimer(update_freq, &AccioHardwareInterface::update, this);
 
     lWheelSub = node_handle_.subscribe("lWheelTicks", 10, &AccioHardwareInterface::lwheel_ticks_cb, this);
     rWheelSub = node_handle_.subscribe("rWheelTicks", 10, &AccioHardwareInterface::rwheel_ticks_cb, this);
+
+    // Initialize publishers and subscribers
+    left_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("accio/left_wheel_vel", 1);
+    right_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("accio/right_wheel_vel", 1);
 
 
 } // constructor
@@ -31,7 +35,7 @@ AccioHardwareInterface::~AccioHardwareInterface(){}; // descructor
 void AccioHardwareInterface::init()
 {
     // Get joint names
-    node_handle_.getParam("/accio/joints", joint_names_);
+    node_handle_.getParam("joints", joint_names_);
     num_joints_ = joint_names_.size();
 
     // resize vectors
@@ -50,23 +54,27 @@ void AccioHardwareInterface::init()
         joint_state_interface_.registerHandle(jointStateHandle);
 
         // Create joint effort interfaces
-        hardware_interface::JointHandle jointEffortHandle(jointStateHandle, &joint_effort_command_[i]);
-        effort_joint_interface_.registerHandle(jointEffortHandle);
+        // hardware_interface::JointHandle jointEffortHandle(jointStateHandle, &joint_effort_command_[i]);
+        // effort_joint_interface_.registerHandle(jointEffortHandle);
 
-        // Create Joint Limit interfaces
-        joint_limits_interface::JointLimits limits;
-        // joint_limits_interface::SoftJointLimits softLimits;
-        joint_limits_interface::getJointLimits(joint_names_[i], node_handle_, limits);
-        joint_limits_interface::EffortJointSaturationHandle jointLimitsHandle(jointEffortHandle, limits);
-        effort_joint_saturation_interface_.registerHandle(jointLimitsHandle);
+    // Create velocity joint interface
+	hardware_interface::JointHandle jointVelocityHandle(jointStateHandle, &joint_velocity_command_[i]);
+    velocity_joint_interface_.registerHandle(jointVelocityHandle);
+
+        // // Create Joint Limit interfaces
+        // joint_limits_interface::JointLimits limits;
+        // // joint_limits_interface::SoftJointLimits softLimits;
+        // joint_limits_interface::getJointLimits(joint_names_[i], node_handle_, limits);
+        // joint_limits_interface::EffortJointSaturationHandle jointLimitsHandle(jointEffortHandle, limits);
+        // effort_joint_saturation_interface_.registerHandle(jointLimitsHandle);
 
     } // end for loop after creating all handles
       // Register all joints interfaces
     registerInterface(&joint_state_interface_);
-    registerInterface(&position_joint_interface_);
-    registerInterface(&effort_joint_interface_);
-    registerInterface(&effort_joint_saturation_interface_);
-    registerInterface(&position_joint_saturation_interface_);
+    // registerInterface(&position_joint_interface_);
+    registerInterface(&velocity_joint_interface_);
+    // registerInterface(&effort_joint_saturation_interface_);
+    // registerInterface(&position_joint_saturation_interface_);
 
     TICKS_TO_RADS = 2 * M_PI / 300.8;
     _curr_lwheel_count,_curr_rwheel_count  = 0;
