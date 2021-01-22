@@ -81,6 +81,7 @@ protected:
     int _prev_right_encoder, _curr_rwheel_count, _delta_r_enc;
     double ang_left, ang_right;
     double TICKS_TO_RADS;
+    double diff_ang_speed_left, diff_ang_speed_right;
 };
 
 #endif

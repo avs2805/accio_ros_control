@@ -27,7 +27,6 @@ AccioHardwareInterface::AccioHardwareInterface(ros::NodeHandle &nh) : node_handl
     left_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("accio/left_wheel_vel", 1);
     right_wheel_vel_pub_ = nh.advertise<std_msgs::Float32>("accio/right_wheel_vel", 1);
 
-
 } // constructor
 
 AccioHardwareInterface::~AccioHardwareInterface(){}; // descructor
@@ -57,9 +56,9 @@ void AccioHardwareInterface::init()
         // hardware_interface::JointHandle jointEffortHandle(jointStateHandle, &joint_effort_command_[i]);
         // effort_joint_interface_.registerHandle(jointEffortHandle);
 
-    // Create velocity joint interface
-	hardware_interface::JointHandle jointVelocityHandle(jointStateHandle, &joint_velocity_command_[i]);
-    velocity_joint_interface_.registerHandle(jointVelocityHandle);
+        // Create velocity joint interface
+        hardware_interface::JointHandle jointVelocityHandle(jointStateHandle, &joint_velocity_command_[i]);
+        velocity_joint_interface_.registerHandle(jointVelocityHandle);
 
         // // Create Joint Limit interfaces
         // joint_limits_interface::JointLimits limits;
@@ -77,7 +76,7 @@ void AccioHardwareInterface::init()
     // registerInterface(&position_joint_saturation_interface_);
 
     TICKS_TO_RADS = 2 * M_PI / 300.8;
-    _curr_lwheel_count,_curr_rwheel_count  = 0;
+    _curr_lwheel_count, _curr_rwheel_count = 0;
     _delta_l_enc, _delta_r_enc = 0;
     _prev_left_encoder, _prev_right_encoder = 0;
     ang_left, ang_right = 0.0;
@@ -94,19 +93,32 @@ void AccioHardwareInterface::update(const ros::TimerEvent &e)
 
 void AccioHardwareInterface::read(ros::Duration elapsed_time)
 {
-    double ang_distance_left = ang_left;
-    double ang_distance_right = ang_right;
-    joint_position_[0] += ang_distance_left;
-    joint_velocity_[0] += ang_distance_left / elapsed_time.toSec();
-    joint_position_[1] += ang_distance_right;
-    joint_velocity_[1] += ang_distance_right / elapsed_time.toSec();
+    // node_handle_.getParam("joints", joint_names_);
+    // num_joints_ = joint_names_.size();
+    for (int i = 0; i < num_joints_; ++i)
+    {   
+        double ang_distance_left = ang_left;
+        double ang_distance_right = ang_right;
+        if (i % 2 == 0)
+        {
+            joint_position_[i] += ang_distance_left;
+            joint_velocity_[i] += ang_distance_left / elapsed_time.toSec();
+        }
+        else
+        {
+            joint_position_[i] += ang_distance_right;
+            joint_velocity_[i] += ang_distance_right / elapsed_time.toSec();
+        }
+    }
 } // read
 
 void AccioHardwareInterface::write(ros::Duration elapsed_time)
 {
-    double diff_ang_speed_left = joint_effort_command_[0];
-    double diff_ang_speed_right = joint_effort_command_[1];
-    effort_joint_saturation_interface_.enforceLimits(elapsed_time);
+    // for (int i = 0; i < num_joints_; ++i)
+    // {   
+    diff_ang_speed_left = joint_velocity_command_[0];
+    diff_ang_speed_right = joint_velocity_command_[1];
+    velocity_joint_saturation_interface_.enforceLimits(elapsed_time);
     // Publish results
     std_msgs::Float32 left_wheel_vel_msg;
     std_msgs::Float32 right_wheel_vel_msg;
@@ -114,6 +126,7 @@ void AccioHardwareInterface::write(ros::Duration elapsed_time)
     right_wheel_vel_msg.data = diff_ang_speed_right;
     left_wheel_vel_pub_.publish(left_wheel_vel_msg);
     right_wheel_vel_pub_.publish(right_wheel_vel_msg);
+    // }
 }
 
 void AccioHardwareInterface::lwheel_ticks_cb(const std_msgs::Int32::ConstPtr &lwheel_ticks_data)
