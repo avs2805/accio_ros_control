@@ -15,7 +15,7 @@ controllers:
   #     joint: RF_hinge
   #     pid: { p: 1.0, i: 1.0, d: 1.0 }
 
-  base_controller:
+  mobile_base_controller:
     type: "diff_drive_controller/DiffDriveController"
     left_wheel: ['FL_hinge','RL_hinge']
     right_wheel: ['FR_hinge','RR_hinge']
@@ -26,15 +26,18 @@ controllers:
     velocity_rolling_window_size: 2
 
     # Base frame_id
-    base_frame_id: base_footprint
+    base_frame_id: base_link
 
     # Odometry fused with IMU is published by robot_localization, so
     # no need to publish a TF based on encoders alone.
     enable_odom_tf: false
+    publish_cmd: true
 
     # Husky hardware provides wheel velocities
     estimate_velocity_from_position: false
 
+    wheel_separation : 0.305 # meters 
+    wheel_radius : 0.135    # meters
     # Wheel separation and radius multipliers
     wheel_separation_multiplier: 1.0 # default: 1.0
     wheel_radius_multiplier    : 1.0 # default: 1.0
@@ -45,7 +48,7 @@ controllers:
       x:
         has_velocity_limits    : true
         max_velocity           : 0.5 # m/s
-        min_velocity           : 0.1 # m/s
+        min_velocity           : -0.5 # m/s
         has_acceleration_limits: true
         max_acceleration       : 0.8 # m/s^2
         min_acceleration       : -0.4 # m/s^2

@@ -1,23 +1,24 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="model" default="$(find accio_description)/urdf/accio_description.xacro" />
-    
     <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
-
     <!-- parameters from config files -->
     <rosparam file="$(find accio_control)/config/controllers.yaml" command="load"/>
-    
     <!-- Nodes -->
-    <node name="accio_hardware_interface" pkg="accio_control" type="accio_control_node" output="screen"/>
-
+    <!-- Hardware Interface Node -->
+    <node name="accio_hardware_interface" pkg="accio_control" type="accio_control_node" output="screen">
+        <remap from="/controllers/mobile_base_controller/cmd_vel" to="/cmd_vel"/>
+    </node>
+    <!-- Controller spawner with joint state controller and robot specific controller -->
     <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" respawn="false"  args="
             controllers/state
-            controllers/base_controller
-        "/>
-
-        <node name="robot_state_publisher" 
+            controllers/mobile_base_controller">
+    </node>
+    <!-- robot state publisher -->
+    <node name="robot_state_publisher" 
         pkg="robot_state_publisher" 
         type="robot_state_publisher" 
         respawn="false" 
-        output="screen"/>
+        output="screen">
+    </node>
 </launch>
